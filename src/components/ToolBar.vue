@@ -83,7 +83,7 @@ export default {
   name: "ToolBar",
   data() {
     return {
-      totalNum: 6,
+      totalNum: 10,
       aniInt: 600,
       timer: 0,
       disabled: false,
@@ -93,6 +93,9 @@ export default {
   },
   computed: {
     ...mapState(["persons"]),
+  },
+  mounted() {
+    this.initPersons(this.totalNum);
   },
   methods: {
     ...mapMutations([

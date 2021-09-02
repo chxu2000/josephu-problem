@@ -20,7 +20,6 @@ export default {
   methods: {
     ...mapMutations(["initPersons", "clearPersons", "leavePerson"]),
     initChart() {
-      this.initPersons(6);
       this.chartInstance = this.$echarts.init(this.$refs.chart);
       const initOption = {
         title: {

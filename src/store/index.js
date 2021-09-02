@@ -11,9 +11,9 @@ const actions = {
 
 const mutations = {
 	initPersons(state, num) {
-		console.log('num: ', num);
-		state.radius = Math.sqrt(num) * state.dis;
-		console.log('radius: ', state.radius);
+		// console.log('num: ', num);
+		state.radius = Math.sqrt(num - 1) * state.dis;
+		// console.log('radius: ', state.radius);
 		var angle = 2 * Math.PI / num;
 		for (var i = 0; i < num; i++) {
 			state.persons.push({
@@ -39,7 +39,7 @@ const mutations = {
 	leavePerson(state, index) {
 		var newPersons = state.persons.concat([]);
 		state.outPersons.push(newPersons.splice(index, 1)[0]);
-		state.radius = Math.sqrt(newPersons.length) * state.dis;
+		state.radius = Math.sqrt(newPersons.length - 1) * state.dis;
 		state.outPersons[state.outPersons.length - 1].itemStyle.color = "#E6A23C";
 		state.outPersons[state.outPersons.length - 1].value = "已出列的人"
 		var angle = 2 * Math.PI / newPersons.length, i;
@@ -55,6 +55,8 @@ const mutations = {
 			state.outPersons[i].y = state.radius + state.dis * (Math.floor(i / 8) + 2);
 		}
 		state.persons = newPersons;
+		console.log(newPersons);
+		console.log(state.outPersons);
 	},
 	selectPerson(state, index) {
 		// console.log('selectPerson: ', index);
