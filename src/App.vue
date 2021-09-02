@@ -1,28 +1,51 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div id="chart">
+      <chart />
+    </div>
+    <div id="tool-bar">
+      <tool-bar />
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Chart from "./components/Chart";
+import ToolBar from "./components/ToolBar";
 
 export default {
-  name: 'App',
   components: {
-    HelloWorld
-  }
-}
+    Chart,
+    ToolBar,
+  },
+};
 </script>
 
 <style>
+html,
+body {
+  height: 100%;
+  width: 100%;
+  /* overflow: hidden; */
+}
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  height: 100%;
+  width: 100%;
+}
+#chart {
+  height: 100%;
+  width: 60%;
+  float: left;
+}
+#tool-bar {
+  height: 100%;
+  width: 40%;
+  float: left;
 }
 </style>
