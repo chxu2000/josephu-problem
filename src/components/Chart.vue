@@ -12,13 +12,14 @@ export default {
     };
   },
   computed: {
-    ...mapState(["persons", "outPersons"]),
+    ...mapState(["persons", "outPersons", "showMarker"]),
   },
   mounted() {
     this.initChart();
   },
   methods: {
     ...mapMutations(["initPersons", "clearPersons", "leavePerson"]),
+    // 初始化图表
     initChart() {
       this.chartInstance = this.$echarts.init(this.$refs.chart);
       const initOption = {
@@ -61,11 +62,8 @@ export default {
         series: [
           {
             type: "graph",
-            data: this.persons.concat(this.outPersons),
+            data: this.persons.concat(this.outPersons).concat(this.showMarker),
           },
-          // {
-          //   data: this.outPersons,
-          // },
         ],
       });
     },

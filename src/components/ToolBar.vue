@@ -17,6 +17,18 @@
         </el-col>
       </el-row>
       <el-row type="flex" justify="space-between" class="h-row">
+        <el-col :span="14"> <h2>起始位置</h2> </el-col>
+        <el-col :span="10" class="v-col">
+          <el-input-number
+            v-model="startPos"
+            :disabled="disabled"
+            :min="1"
+            :max="totalNum"
+            label="起始位置"
+          ></el-input-number>
+        </el-col>
+      </el-row>
+      <el-row type="flex" justify="space-between" class="h-row">
         <el-col :span="14"> <h2>动画间隔 / ms</h2> </el-col>
         <el-col :span="10" class="v-col">
           <el-slider
@@ -84,18 +96,21 @@ export default {
   data() {
     return {
       totalNum: 10,
+      startPos: 1,
       aniInt: 600,
       timer: 0,
       disabled: false,
       rdisabled: true,
       points: "- -",
+      cPersons: [],
     };
   },
   computed: {
-    ...mapState(["persons"]),
+    ...mapState(["persons", "marker"]),
   },
   mounted() {
     this.initPersons(this.totalNum);
+    this.selectPerson(this.startPos - 1);
   },
   methods: {
     ...mapMutations([
@@ -104,10 +119,29 @@ export default {
       "leavePerson",
       "selectPerson",
       "deselectPerson",
+      "setMarker",
     ]),
-    shinePerson(index) {
+    // 计算Persons中对应的序号
+    getCurIndex(nameIndex) {
+      console.log("cPersons:", this.cPersons);
+      var bias = 0;
+      for (var i = 0; i < this.cPersons.length; i++) {
+        if (this.cPersons[i].left === true) {
+          ++bias;
+          continue;
+        }
+        if (this.cPersons[i].index === nameIndex) {
+          return i - bias;
+        }
+      }
+    },
+    // 闪烁选中某人
+    shinePerson(index, mark = true) {
       console.log("shinePerson: ", index);
       setTimeout(() => {
+        if (mark) {
+          this.setMarker(index);
+        }
         this.selectPerson(index);
       }, this.aniInt * this.timer);
       setTimeout(() => {
@@ -120,24 +154,43 @@ export default {
         this.deselectPerson(index);
       }, this.aniInt * this.timer++ + (3 * this.aniInt) / 4);
     },
+    // 重置游戏
     remake() {
       this.clearPersons();
       this.initPersons(this.totalNum);
+      this.selectPerson(this.startPos - 1);
       this.rdisabled = true;
       this.disabled = false;
     },
+    // 开始游戏
     play() {
       this.disabled = true;
       this.rdisabled = true;
       this.timer = 0;
-      var i,
-        j,
-        choice,
-        pointer = 0,
-        len = this.persons.length;
-      for (i = 0; i < len - 1; i++) {
+      var i, j, choice;
+      // 清空cPersons
+      while (this.cPersons.length > 0) {
+        this.cPersons.pop();
+      }
+      // 初始化cPersons
+      for (i = 0; i < this.totalNum; ++i) {
+        this.cPersons.push({
+          index: i + 1,
+          left: false,
+        });
+      }
+      // 初始化各节点的前驱、后驱节点
+      for (i = 0; i < this.totalNum; i++) {
+        this.cPersons[i].prior =
+          this.cPersons[(i - 1 + this.totalNum) % this.totalNum];
+        this.cPersons[i].next = this.cPersons[(i + 1) % this.totalNum];
+      }
+      // 起始节点
+      console.log('startPos: ', this.startPos);
+      var cur = this.cPersons[this.startPos - 1];
+      for (i = 0; i < this.totalNum - 1; i++) {
         choice = Math.floor(Math.random() * 6) + 1;
-        // choice = 5;
+        // 模拟投骰子
         ((c) => {
           setTimeout(() => {
             rollDiceWithValues(c);
@@ -146,28 +199,32 @@ export default {
             this.points = c;
           }, this.aniInt * this.timer + 500);
         })(choice);
+        // 投骰子延时
         this.timer += 1000 / this.aniInt;
-        // console.log("choice: ", choice);
-        // console.log("pointer: ", pointer);
         for (j = 0; j < choice; j++) {
-          pointer %= len - i;
-          this.shinePerson(pointer);
-          if (j == choice - 1) {
-            ((p, l) => {
-              console.log("leavePerson: ", p);
-              setTimeout(() => {
-                this.leavePerson(p);
-              }, this.aniInt * this.timer++);
-              if (l != 1) {
-                this.shinePerson(p % l);
-                setTimeout(() => {
-                  this.selectPerson(p % l);
-                }, this.aniInt * this.timer++);
-              }
-            })(pointer, len - i - 1);
-          } else {
-            ++pointer;
-          }
+          console.log("cur", cur);
+          this.shinePerson(this.getCurIndex(cur.index));
+          // 通过next寻找下一节点
+          cur = cur.next;
+        }
+        cur = cur.prior;
+        ((i) =>
+          setTimeout(() => {
+            this.leavePerson(i);
+          }, this.aniInt * this.timer++))(this.getCurIndex(cur.index));
+        // 用于查找元素操作时的id
+        cur.left = true;
+        // 循环列表删除节点，修改prior节点的next指针及next节点的prior指针
+        cur.prior.next = cur.next;
+        cur.next.prior = cur.prior;
+        // cur指向下一节点
+        cur = cur.next;
+        if (i != this.totalNum - 2) {
+          this.shinePerson(this.getCurIndex(cur.index), false);
+          ((i) =>
+            setTimeout(() => {
+              this.selectPerson(i);
+            }, this.aniInt * this.timer++))(this.getCurIndex(cur.index));
         }
       }
       setTimeout(() => {
@@ -180,6 +237,14 @@ export default {
     totalNum(newValue) {
       this.clearPersons();
       this.initPersons(newValue);
+      if (this.startPos > newValue) {
+        this.startPos = newValue;
+      }
+      this.selectPerson(this.startPos - 1);
+    },
+    startPos(newValue, oldValue) {
+      this.deselectPerson(oldValue - 1);
+      this.selectPerson(newValue - 1);
     },
   },
 };
